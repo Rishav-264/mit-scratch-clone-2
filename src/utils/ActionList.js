@@ -80,12 +80,7 @@ export const ActionList = {
             colorClass:"text-green-600",
             type:"flagClicked",
             initiator: true
-        },
-        // {
-        //     text:"when this sprite is clicked",
-        //     type:"spriteClick",
-        //     initiator: true
-        // }
+        }
     ],
     Looks: [
         {
