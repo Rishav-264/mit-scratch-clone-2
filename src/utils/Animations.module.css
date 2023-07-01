@@ -1,0 +1,11 @@
+.move{
+    animation: move 1s ease-in forwards;
+}
+
+@keyframes move {
+    from{
+
+    }to{
+        transform: translateX(--x);
+    }
+}
