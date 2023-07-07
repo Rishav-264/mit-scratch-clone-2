@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Icon from "./Icon";
 import { useDrag } from "react-dnd";
 import { v4 as uuidv4 } from 'uuid';
 
 const Action = ({ 
+    elemPosition,
     content, 
     backgroundColor, 
     isDraggable, 
@@ -15,8 +16,13 @@ const Action = ({
     currentY, 
     currentDuration, 
     currentSteps,
-    currentSize
+    currentSize,
+    removeAction,
+    blockId,
+    actionId
 }) => {
+
+  const elemRef = useRef();
 
   const [elements, setElements] = useState([]);
   const [x, setX] = useState("0");
@@ -26,8 +32,9 @@ const Action = ({
   const [select, setSelect] = useState("random-position");
   const [steps, setSteps] = useState(0);
   const [size, setSize] = useState(10);
+  const [dropPosition, setDropPosition] = useState();
 
-  const [{isDragging}, drag] = useDrag(()=>({
+  const [{isDragging, position}, drag] = useDrag(()=>({
     type:"action",
     item: {
         id: uuidv4(),
@@ -42,12 +49,22 @@ const Action = ({
         select: select,
         size: size,
         type: content?.type,
-        initiator: content?.initiator
+        initiator: content?.initiator,
+        position: null
     },
     collect: (monitor) => ({
         isDragging: !!monitor.isDragging(),
-    })
-  }),[x,y,duration,rotation,steps,select, size]);
+        position: monitor.getClientOffset(),
+    }),
+  }),[x,y,duration,rotation,steps,select,size,position]);
+
+//   const handleDrag = useCallback(() => {
+//     setDropPosition(position);
+//     console.log('FIRED');
+//     if (drag.isDragging) {
+//         console.log('Dragging in progress', elemRef.current);
+//       }
+//   }, [position]);
 
   useEffect(() => {
     setElements(content?.text?.split(" "));
@@ -93,11 +110,33 @@ const Action = ({
     }
   }, []);
 
+  useEffect(()=>{
+    console.log("ELEM POSITION OMG", elemPosition);
+  },[elemPosition])
+
+  const handleDrag = () => {
+    if(isDragging){
+        document.addEventListener('mousemove', handleMouseMove);
+    }else{
+        document.removeEventListener('mousemove');
+    }
+  }
+
+  function handleMouseMove(event) {
+    const mouseX = event.clientX;
+    const mouseY = event.clientY;
+  
+    // Use mouseX and mouseY as needed
+    console.log('Mouse X:', mouseX);
+    console.log('Mouse Y:', mouseY);
+  }
+
   return (
     <div
-      className="inline-flex rounded flex-row flex-shrink-0 flex-grow-0 flex-wrap items-center text-white px-2 py-1 text-sm"
+      className="flex rounded flex-row flex-shrink-0 flex-grow-0 flex-wrap items-center text-white px-2 py-1 text-sm"
       style={{ cursor:isDraggable ? "grab" : "auto", backgroundColor: backgroundColor, border: isDragging ? "1px solid black" : "none",margin: (id===undefined) ? "0.125rem 0" : "0" }}
-      ref={isDraggable ? drag : null}
+      ref={isDraggable ? drag : elemRef}
+    //   onDrag={handleDrag}
     >
       {elements?.map((elem, index) => (
         <div key={index}>
@@ -165,16 +204,19 @@ const Action = ({
             {" "}
         </div>
       ))}
-      {(id!==undefined) && 
+      {/* {(id!==undefined) && 
         <div 
             className="ml-auto cursor-pointer"
             onClick={()=>{
                 setActionTree(prev=>prev.filter(elem=>elem.id!==id));
+                console.log("ACTION ID", actionId);
+                console.log("BLOCK ID", blockId);
+                removeAction(actionId, blockId)
             }}
         >
             <Icon name="trash" size={15} className="text-slate-600 mx-2" />
         </div>
-      }
+      } */}
     </div>
   );
 };

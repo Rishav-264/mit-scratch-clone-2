@@ -4,7 +4,7 @@ import { useAnimate } from "framer-motion";
 import reducer from "../utils/reducer";
 import Icon from "./Icon";
 
-export default function PreviewArea({actionTree}) {
+export default function PreviewArea({actionTree, actionStack, setActionStack, codeBlock}) {
 
   const [scope, animate] = useAnimate()
   const [startExecution, setStartExecution] = useState(false);
@@ -61,7 +61,18 @@ export default function PreviewArea({actionTree}) {
   
     const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
 
-    actionTree.forEach((action)=>{
+    let stack = [];
+    for(let i = 0; i < codeBlock.length; i++){
+      if(codeBlock[i].actions[0].initiator === true){
+        let purifiedActions = codeBlock[i].actions.filter(prev=>prev!=undefined)
+        console.log("PURIFED ACTIONS", purifiedActions);
+        stack = [...stack, ...purifiedActions];
+      }
+    }
+
+    console.log('STACK',stack);
+
+    stack.forEach((action)=>{
       dispatch({
         type: action?.type,
         x: action?.x,
@@ -92,12 +103,6 @@ export default function PreviewArea({actionTree}) {
       properties.map((property, index)=>{
         console.log(`ITERATION ${index}`, property)
         console.log("Animation Definition", {x: property?.x, y: property?.y, rotate: property?.rotation});
-        // if(index === properties.length - 1 && property?.[index - 1]?.spriteWidth!==property?.spriteWidth){
-        //   console.log("HERE in svg");
-        //   setSequence(prev=>[...prev , ["svg", {x: property?.x, y: property?.y, rotate: property?.rotation, width: property?.spriteWidth, height: property?.spriteHeight}, {duration: property.duration}]]);
-        // }else{
-        //   setSequence(prev=>[...prev , ["svg", {x: property?.x, y: property?.y, rotate: property?.rotation, width: property?.spriteWidth, height: property?.spriteHeight}, {duration: property.duration}]]);
-        // }
         setSequence(prev=>[...prev , ["svg", {x: property?.x, y: property?.y, rotate: property?.rotation, width: property?.spriteWidth, height: property?.spriteHeight}, {duration: property.duration}]]);
       })
     }
@@ -105,7 +110,7 @@ export default function PreviewArea({actionTree}) {
 
   useEffect(()=>{
     console.log("SEQUENCE", sequence);
-    if(sequence.length === properties.length && sequence.length !== 0){
+    if(sequence?.length === properties?.length && sequence.length !== 0){
       animate(sequence);
       dispatch({
         type:"update"
@@ -147,19 +152,6 @@ export default function PreviewArea({actionTree}) {
       className="flex-none w-full h-full overflow-y-auto p-2 relative"
       ref={scope}
     >
-      {/* <div  
-        className="flex-none overflow-y-auto p-2 relative"
-        style={{width:properties?.[properties.length - 1]?.spriteWidth , height:properties?.[properties.length - 1]?.spriteHeight}}
-        onClick={(e)=>{
-          console.log("CLICKED");
-          if(spriteClick.current){
-            console.log("ACTION TREE 2", actionTree);
-            executeTree(e)
-          }
-        }}
-      >
-      <CatSprite style={{width:properties?.[properties.length - 1]?.spriteWidth, height:properties?.[properties.length - 1]?.spriteHeight}} />
-      </div> */}
       <CatSprite 
         style={{ pointerEvents: "auto" }}
         onClick={(e)=>{
